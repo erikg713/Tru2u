@@ -1,7 +1,3 @@
-# Tru2u
-Here’s a detailed `README.md` file for **True-2-u-dating-network**, covering all the essential aspects from setting up to deploying the app.
-
-```markdown
 # True-2-u-dating-network
 
 **True-2-u-dating-network** is a Web3-powered dating app built on the Pi Network ecosystem, ensuring secure transactions, fully encrypted user data, and a premium matching experience. It features advanced user authentication, privacy controls, role-based access, and real-time messaging for a fully interactive dating experience.
