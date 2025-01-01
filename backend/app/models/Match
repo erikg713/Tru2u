@@ -14,3 +14,6 @@ class Match(Base):
     
     user1 = relationship("User", foreign_keys=[user1_id])
     user2 = relationship("User", foreign_keys=[user2_id])
+
+score = Column(Integer, nullable=True)  # Compatibility score
+    status = Column(String(50), default="pending")  # Match status
