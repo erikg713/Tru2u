@@ -11,3 +11,26 @@ def create_match():
     db.session.add(match)
     db.session.commit()
     return jsonify({"message": "Match created successfully!", "match_id": match.id})
+
+@matches_bp.route("/matches/<int:match_id>", methods=["DELETE"])
+def unmatch(match_id):
+    match = Match.query.get(match_id)
+    if not match:
+        return jsonify({"error": "Match not found"}), 404
+
+    db.session.delete(match)
+    db.session.commit()
+    return jsonify({"message": "Unmatched successfully!"})
+def recommend_matches(user_id, session, max_results=10):
+    user = session.query(User).filter(User.id == user_id).first()
+    if not user:
+        return []
+
+    # Example: Recommend users with the same interests within 50 km
+    recommendations = session.query(User).filter(
+        User.id != user_id,
+        User.interests.overlap(user.interests),  # Shared interests
+        User.location.distance(user.location) < 50  # Proximity check
+    ).limit(max_results).all()
+
+    return recommendations
