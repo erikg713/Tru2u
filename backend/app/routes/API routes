@@ -1,1 +1,13 @@
+from flask import Blueprint, request, jsonify
+from app.models import Match
+from app.database import db
 
+matches_bp = Blueprint("matches", __name__)
+
+@matches_bp.route("/matches", methods=["POST"])
+def create_match():
+    data = request.json
+    match = Match(user1_id=data["user1_id"], user2_id=data["user2_id"])
+    db.session.add(match)
+    db.session.commit()
+    return jsonify({"message": "Match created successfully!", "match_id": match.id})
