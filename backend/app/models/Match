@@ -1,1 +1,16 @@
+from datetime import datetime
+from sqlalchemy import Column, Integer, ForeignKey, Boolean, DateTime
+from sqlalchemy.orm import relationship
+from app.database import Base  # Assuming you're using a Base class for your ORM setup
 
+class Match(Base):
+    __tablename__ = "matches"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user1_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user2_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_active = Column(Boolean, default=True)  # Represents if the match is still active
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user1 = relationship("User", foreign_keys=[user1_id])
+    user2 = relationship("User", foreign_keys=[user2_id])
