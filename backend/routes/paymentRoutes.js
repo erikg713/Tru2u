@@ -16,3 +16,5 @@ router.post('/', protect, createPayment);
 router.get('/', protect, getUserPayments);
 
 module.exports = router;
+const { paymentWebhook } = require('../controllers/paymentController');
+router.post('/webhook', paymentWebhook);
