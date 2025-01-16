@@ -8,3 +8,5 @@ router.post('/', createMessage); // Create message
 router.get('/room/:roomId', getMessagesByRoom); // Get messages by room ID
 
 module.exports = router;
+const { getChatHistory } = require('../controllers/messageController');
+router.get('/history/:user1/:user2', getChatHistory);
