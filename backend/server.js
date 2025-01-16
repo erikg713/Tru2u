@@ -72,3 +72,28 @@ io.on('connection', (socket) => {
 
 // Start Server
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  // Listen for notifications
+  socket.on('notify', (data) => {
+    io.emit('notification', data); // Broadcast to all clients
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Start Server
+server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
