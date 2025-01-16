@@ -80,12 +80,16 @@ REACT_APP_PI_API_KEY=your_pi_api_key
 
 ### 1. Backend Setup
 Navigate to the `backend` folder, install dependencies, and run the Flask app:
-
-```bash
+mkdir backend
 cd backend
-pip install -r requirements.txt
-python app.py
-```
+npm init -y
+npm install express mongoose dotenv cors bcryptjs jsonwebtoken body-parser
+npm install nodemon --save-dev
+
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+PI_API_KEY=your_pi_network_api_key
 
 ### 2. Frontend Setup
 Navigate to the `frontend` folder, install dependencies, and start the React app:
