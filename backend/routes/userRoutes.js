@@ -25,3 +25,6 @@ router.put('/:uid', updateUserRoles); // Update user roles
 router.delete('/:uid', deleteUser); // Delete user
 
 module.exports = router;
+const { loginUser, refreshToken } = require('../controllers/userController');
+router.post('/login', loginUser);
+router.get('/refresh-token', refreshToken);
