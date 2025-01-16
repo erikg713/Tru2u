@@ -28,3 +28,5 @@ module.exports = router;
 const { loginUser, refreshToken } = require('../controllers/userController');
 router.post('/login', loginUser);
 router.get('/refresh-token', refreshToken);
+const { getAllUsers } = require('../controllers/userController');
+router.get('/admin/all', getAllUsers);
