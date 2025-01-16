@@ -4,112 +4,150 @@ import platformAPIClient from "../services/platformAPIClient";
 import "../types/session";
 
 export default function mountPaymentsEndpoints(router: Router) {
-  // handle the incomplete payment
+  // Handle incomplete payment
   router.post('/incomplete', async (req, res) => {
-    const payment = req.body.payment;
-    const paymentId = payment.identifier;
-    const txid = payment.transaction && payment.transaction.txid;
-    const txURL = payment.transaction && payment.transaction._link;
+    try {
+      const payment = req.body.payment;
+      const paymentId = payment.identifier;
+      const txid = payment.transaction?.txid;
+      const txURL = payment.transaction?._link;
 
-    /* 
-      implement your logic here
-      e.g. verifying the payment, delivering the item to the user, etc...
+      const app = req.app;
+      const orderCollection = app.locals.orderCollection;
+      const userId = req.session.currentUser?.uid;
 
-      below is a naive example
-    */
+      if (!userId) {
+        return res.status(401).json({ message: "User must be logged in." });
+      }
 
-    // find the incomplete order
-    const app = req.app;
-    const orderCollection = app.locals.orderCollection;
-    const order = await orderCollection.findOne({ pi_payment_id: paymentId });
+      // Check if the order exists
+      const order = await orderCollection.findOne({ pi_payment_id: paymentId, user: userId });
 
-    // order doesn't exist 
-    if (!order) {
-      return res.status(400).json({ message: "Order not found" });
+      if (!order) {
+        return res.status(404).json({ message: "Order not found for this user." });
+      }
+
+      // Verify the transaction on the Pi blockchain
+      const horizonResponse = await axios.create({ timeout: 20000 }).get(txURL);
+      const paymentIdOnBlock = horizonResponse.data.memo;
+
+      if (paymentIdOnBlock !== order.pi_payment_id) {
+        return res.status(400).json({ message: "Payment ID mismatch on blockchain." });
+      }
+
+      // Mark the order as paid and unlock features
+      await orderCollection.updateOne(
+        { pi_payment_id: paymentId },
+        { $set: { txid, paid: true, updated_at: new Date() } }
+      );
+
+      // Notify Pi servers of completion
+      await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
+
+      return res.status(200).json({ message: `Payment ${paymentId} processed successfully.` });
+    } catch (error) {
+      console.error("Error handling incomplete payment:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-
-    // check the transaction on the Pi blockchain
-    const horizonResponse = await axios.create({ timeout: 20000 }).get(txURL);
-    const paymentIdOnBlock = horizonResponse.data.memo;
-
-    // and check other data as well e.g. amount
-    if (paymentIdOnBlock !== order.pi_payment_id) {
-      return res.status(400).json({ message: "Payment id doesn't match." });
-    }
-
-    // mark the order as paid
-    await orderCollection.updateOne({ pi_payment_id: paymentId }, { $set: { txid, paid: true } });
-
-    // let Pi Servers know that the payment is completed
-    await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
-    return res.status(200).json({ message: `Handled the incomplete payment ${paymentId}` });
   });
 
-  // approve the current payment
+  // Approve current payment
   router.post('/approve', async (req, res) => {
-    if (!req.session.currentUser) {
-      return res.status(401).json({ error: 'unauthorized', message: "User needs to sign in first" });
+    try {
+      const userId = req.session.currentUser?.uid;
+
+      if (!userId) {
+        return res.status(401).json({ message: "User must be logged in." });
+      }
+
+      const app = req.app;
+      const paymentId = req.body.paymentId;
+      const currentPayment = await platformAPIClient.get(`/v2/payments/${paymentId}`);
+
+      const orderCollection = app.locals.orderCollection;
+
+      // Create an order record for premium service
+      const subscriptionType = currentPayment.data.metadata.subscriptionType || "basic";
+
+      await orderCollection.insertOne({
+        pi_payment_id: paymentId,
+        user: userId,
+        subscription_type: subscriptionType,
+        txid: null,
+        paid: false,
+        cancelled: false,
+        created_at: new Date(),
+      });
+
+      // Notify Pi servers that approval is ready
+      await platformAPIClient.post(`/v2/payments/${paymentId}/approve`);
+
+      return res.status(200).json({ message: `Payment ${paymentId} approved.` });
+    } catch (error) {
+      console.error("Error approving payment:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-
-    const app = req.app;
-
-    const paymentId = req.body.paymentId;
-    const currentPayment = await platformAPIClient.get(`/v2/payments/${paymentId}`);
-    const orderCollection = app.locals.orderCollection;
-
-    /* 
-      implement your logic here 
-      e.g. creating an order record, reserve an item if the quantity is limited, etc...
-    */
-
-    await orderCollection.insertOne({
-      pi_payment_id: paymentId,
-      product_id: currentPayment.data.metadata.productId,
-      user: req.session.currentUser.uid,
-      txid: null,
-      paid: false,
-      cancelled: false,
-      created_at: new Date()
-    });
-
-    // let Pi Servers know that you're ready
-    await platformAPIClient.post(`/v2/payments/${paymentId}/approve`);
-    return res.status(200).json({ message: `Approved the payment ${paymentId}` });
   });
 
-  // complete the current payment
+  // Complete current payment
   router.post('/complete', async (req, res) => {
-    const app = req.app;
+    try {
+      const app = req.app;
+      const paymentId = req.body.paymentId;
+      const txid = req.body.txid;
 
-    const paymentId = req.body.paymentId;
-    const txid = req.body.txid;
-    const orderCollection = app.locals.orderCollection;
+      const orderCollection = app.locals.orderCollection;
 
-    /* 
-      implement your logic here
-      e.g. verify the transaction, deliver the item to the user, etc...
-    */
+      const order = await orderCollection.findOne({ pi_payment_id: paymentId });
 
-    await orderCollection.updateOne({ pi_payment_id: paymentId }, { $set: { txid: txid, paid: true } });
+      if (!order) {
+        return res.status(404).json({ message: "Order not found." });
+      }
 
-    // let Pi server know that the payment is completed
-    await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
-    return res.status(200).json({ message: `Completed the payment ${paymentId}` });
+      // Mark as paid and activate subscription
+      await orderCollection.updateOne(
+        { pi_payment_id: paymentId },
+        { $set: { txid, paid: true, activated_at: new Date() } }
+      );
+
+      // Notify Pi servers that payment is complete
+      await platformAPIClient.post(`/v2/payments/${paymentId}/complete`, { txid });
+
+      // Business Logic: Activate user's premium services
+      activateUserPremium(order.user, order.subscription_type);
+
+      return res.status(200).json({ message: `Payment ${paymentId} completed.` });
+    } catch (error) {
+      console.error("Error completing payment:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
   });
 
-  // handle the cancelled payment
+  // Cancelled payment
   router.post('/cancelled_payment', async (req, res) => {
-    const app = req.app;
+    try {
+      const app = req.app;
+      const paymentId = req.body.paymentId;
 
-    const paymentId = req.body.paymentId;
-    const orderCollection = app.locals.orderCollection;
+      const orderCollection = app.locals.orderCollection;
 
-    /*
-      implement your logic here
-      e.g. mark the order record to cancelled, etc...
-    */
+      // Mark the order as cancelled
+      await orderCollection.updateOne(
+        { pi_payment_id: paymentId },
+        { $set: { cancelled: true, updated_at: new Date() } }
+      );
 
-    await orderCollection.updateOne({ pi_payment_id: paymentId }, { $set: { cancelled: true } });
-    return res.status(200).json({ message: `Cancelled the payment ${paymentId}` });
-  })
+      return res.status(200).json({ message: `Payment ${paymentId} cancelled.` });
+    } catch (error) {
+      console.error("Error cancelling payment:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  });
+
+  // Activate user premium (helper function)
+  async function activateUserPremium(userId: string, subscriptionType: string) {
+    // Logic to activate premium services for the user in the Tru2u system
+    console.log(`Activating ${subscriptionType} for user ${userId}`);
+    // Implement your database or API logic here
+  }
 }
