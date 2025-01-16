@@ -48,3 +48,19 @@ exports.getPaymentsByUser = async (req, res) => {
     res.status(500).json({ message: 'Error fetching payments', error: err.message });
   }
 };
+exports.paymentWebhook = async (req, res) => {
+  try {
+    const { pi_payment_id, status } = req.body;
+
+    const payment = await Payment.findOne({ pi_payment_id });
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    payment.status = status;
+    if (status === 'completed') payment.completedAt = new Date();
+    await payment.save();
+
+    res.status(200).json({ message: 'Payment status updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error handling payment webhook', error: err.message });
+  }
+};
