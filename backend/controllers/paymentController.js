@@ -24,3 +24,27 @@ exports.getUserPayments = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+const Payment = require('../models/Payment');
+
+// Create a new payment
+exports.createPayment = async (req, res) => {
+  try {
+    const { userId, pi_payment_id, amount } = req.body;
+    const newPayment = await Payment.create({ userId, pi_payment_id, amount });
+    res.status(201).json(newPayment);
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating payment', error: err.message });
+  }
+};
+
+// Get all payments for a user
+exports.getPaymentsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const payments = await Payment.find({ userId });
+    res.status(200).json(payments);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching payments', error: err.message });
+  }
+};
