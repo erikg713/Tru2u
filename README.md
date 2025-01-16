@@ -75,6 +75,9 @@ MESSAGE_ENCRYPTION_KEY=your_message_encryption_key
 REACT_APP_API_URL=http://localhost:5000/api
 REACT_APP_PI_API_KEY=your_pi_api_key
 ```
+npx create-react-app tru2u-frontend
+cd tru2u-frontend
+npm install axios react-router-dom @mui/material @emotion/react @emotion/styled
 
 ## Running the Application
 
