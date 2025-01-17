@@ -1,0 +1,5 @@
+docker
+flask-cors
+flask-ALchemy
+flask-Migrate
+flask-JWT-extended
