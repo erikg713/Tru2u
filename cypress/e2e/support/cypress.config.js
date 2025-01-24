@@ -14,3 +14,7 @@ module.exports = defineConfig({
     }
   },
 });
+it('should complete a payment using custom commands', () => {
+  cy.login('test-user', 'password123');
+  cy.initiatePayment('3.14', 'Test Payment');
+});
