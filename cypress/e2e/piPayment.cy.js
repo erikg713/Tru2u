@@ -42,3 +42,33 @@ describe("E2E: Pi Payment Full-Stack Flow", () => {
     cy.contains("Invalid payment amount").should("be.visible");
   });
 });
+describe('E2E: Pi Payment Flow', () => {
+  beforeEach(() => {
+    cy.visit('/'); // Visit the homepage or app route
+  });
+
+  it('should allow a user to complete a Pi payment', () => {
+    // Step 1: Log in (if required)
+    cy.get('#loginButton').click();
+    cy.get('#username').type('test-user');
+    cy.get('#password').type('password123');
+    cy.get('#submitLogin').click();
+
+    // Step 2: Initiate the payment
+    cy.get('#payButton').click();
+
+    // Step 3: Fill payment details
+    cy.get('#amountInput').type('3.14'); // Enter the payment amount
+    cy.get('#memoInput').type('E2E Test Payment'); // Add a memo
+    cy.get('#submitPayment').click();
+
+    // Step 4: Verify the payment creation
+    cy.contains('Payment created successfully').should('be.visible');
+
+    // Step 5: Check the backend or transaction logs
+    cy.request('GET', '/api/payments').then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body).to.have.property('status', 'completed');
+    });
+  });
+});
