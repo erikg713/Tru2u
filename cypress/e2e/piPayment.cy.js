@@ -1,29 +1,44 @@
-describe("E2E: Pi Payment Flow", () => {
-  it("should allow a user to make a Pi payment", () => {
-    // Visit the frontend app
+describe("E2E: Pi Payment Full-Stack Flow", () => {
+  beforeEach(() => {
+    // Set up environment and visit the app
     cy.visit("http://localhost:3000"); // Replace with your app's URL
+  });
 
-    // Authenticate the user (mock this if needed)
+  it("should allow the user to complete a Pi payment", () => {
+    // Step 1: Log in (mock or real flow)
     cy.get("#loginButton").click();
     cy.get("#username").type("test-user");
     cy.get("#password").type("password123");
     cy.get("#submitLogin").click();
 
-    // Trigger payment flow
+    // Step 2: Initiate the payment
     cy.get("#payButton").click();
 
-    // Fill in payment details
+    // Step 3: Fill payment details
     cy.get("#amountInput").type("3.14");
     cy.get("#memoInput").type("E2E Test Payment");
     cy.get("#submitPayment").click();
 
-    // Verify payment creation
+    // Step 4: Verify payment creation
     cy.contains("Payment created successfully").should("be.visible");
 
-    // Check backend logs or network calls for validation
+    // Step 5: Verify backend transaction status
     cy.request("GET", "/api/payments").then((response) => {
       expect(response.status).to.eq(200);
-      expect(response.body).to.have.property("status", "completed");
+      expect(response.body.status).to.eq("completed");
     });
+  });
+
+  it("should handle invalid payment gracefully", () => {
+    // Step 1: Initiate the payment
+    cy.get("#payButton").click();
+
+    // Step 2: Fill invalid payment details
+    cy.get("#amountInput").type("0"); // Invalid amount
+    cy.get("#memoInput").type("Invalid Payment Test");
+    cy.get("#submitPayment").click();
+
+    // Step 3: Verify error message
+    cy.contains("Invalid payment amount").should("be.visible");
   });
 });
