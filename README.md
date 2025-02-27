@@ -42,7 +42,7 @@
 4. Run the frontend:
    ```bash
    cd frontend
-   npm install
+   npm install axios
    npm start
    ```
 
@@ -53,7 +53,7 @@
    ```bash
    docker-compose up --build
    ```
-2. Access the app at `http://localhost`.
+2. 
 
 ---
 
