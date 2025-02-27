@@ -1,54 +1,24 @@
-import React, { useState } from 'react';
-import API from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
 
-const SignUp = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    uid: '',
-    password: '',
-  });
+const Signup = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const navigate = useNavigate();
-
-  const handleSignUp = async () => {
-    try {
-      // Make API call to register the user
-      const { data } = await API.post('/users/register', formData);
-      alert('Sign up successful!');
-      // Automatically log in the user and store their token
-      localStorage.setItem('user', JSON.stringify(data));
-      navigate('/profile'); // Redirect to profile page
-    } catch (err) {
-      console.error(err.message);
-      alert('Failed to sign up. Try again.');
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert(`Account created for ${email}`);
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <input
-        type="text"
-        placeholder="Username"
-        value={formData.username}
-        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-      />
-      <input
-        type="text"
-        placeholder="Unique ID (UID)"
-        value={formData.uid}
-        onChange={(e) => setFormData({ ...formData, uid: e.target.value })}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={formData.password}
-        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-      />
-      <button onClick={handleSignUp}>Sign Up</button>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Signup</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button type="submit" className="bg-green-500 text-white p-2">Sign Up</button>
+      </form>
     </div>
   );
 };
 
-export default SignUp;
+export default Signup;
