@@ -1,10 +1,10 @@
-import React from 'react';
+import React from "react";
 
 const Home = () => {
   return (
-    <div>
-      <h1>Welcome to Tru2u!</h1>
-      <p>Your trusted dating network on the Pi Network Web3 ecosystem.</p>
+    <div className="p-6 text-center">
+      <h1 className="text-3xl font-bold">Welcome to True-2-U Dating</h1>
+      <p>Find your perfect match today!</p>
     </div>
   );
 };
