@@ -27,7 +27,7 @@
 ### **Installation Steps**
 1. Clone the repository:
    ```bash
- #  git clone https://github.com/erikg713/true-2-u-dating-network.git #
+  git clone https://github.com/erikg713/true-2-u-dating-network.git 
    cd true-2-u-dating-network
    ```
 2. Set up environment variables in `.env` files for both backend and frontend.
