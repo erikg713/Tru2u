@@ -37,6 +37,7 @@ const mongoose = require('mongoose');
 dotenv.config();
 
 const app = express();
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -105,3 +106,19 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Error fetching users', error: err.message });
   }
 };
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/db");
+
+const app = express();
+connectDB();
+
+app.use(express.json());
+app.use(cors());
+
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/matches", require("./routes/matchRoutes"));
+
+app.listen(5000, () => console.log("Server running on port 5000"));
